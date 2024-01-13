@@ -1,51 +1,84 @@
-# Copyright (c) Streamlit Inc. (2018-2022) Snowflake Inc. (2022)
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
+# Import necessary libraries
 import streamlit as st
-from streamlit.logger import get_logger
+import pandas as pd
+import numpy as np
+import plotly.express as px
 
-LOGGER = get_logger(__name__)
-
-
-def run():
+# Create a simple Streamlit app
+def main():
     st.set_page_config(
-        page_title="Hello",
+        page_title="1st app",
         page_icon="👋",
     )
+    # Set the title of the app
+    st.title("Streamlit Example App")
 
-    st.write("# Welcome to Streamlit! 👋")
-
-    st.sidebar.success("Select a demo above.")
-
-    st.markdown(
-        """
-        Streamlit is an open-source app framework built specifically for
-        Machine Learning and Data Science projects.
-        **👈 Select a demo from the sidebar** to see some examples
-        of what Streamlit can do!
-        ### Want to learn more?
-        - Check out [streamlit.io](https://streamlit.io)
-        - Jump into our [documentation](https://docs.streamlit.io)
-        - Ask a question in our [community
-          forums](https://discuss.streamlit.io)
-        ### See more complex demos
-        - Use a neural net to [analyze the Udacity Self-driving Car Image
-          Dataset](https://github.com/streamlit/demo-self-driving)
-        - Explore a [New York City rideshare dataset](https://github.com/streamlit/demo-uber-nyc-pickups)
-    """
+    # Create a sidebar with options
+    option = st.sidebar.selectbox(
+        'Select an option',
+        ('Home', 'Data Exploration', 'About')
     )
 
+    # Home Page
+    if option == 'Home':
+        st.write('Welcome to the Home Page!')
+        st.image("logo.png", caption="Streamlit Logo", use_column_width=True)
 
+    # Data Exploration Page
+    elif option == 'Data Exploration':
+        st.subheader('Explore your data here:')
+        uploaded_file = st.file_uploader("Please upload the csv file.", type="csv")
+
+        if uploaded_file is not None:
+            exp=st.sidebar.selectbox('Select the exploration method:',('Chart','Graph','Summary'))
+            # Read the data from the uploaded CSV file
+            df = pd.read_csv(uploaded_file)
+            # Display the dataframe
+            if exp=='Chart':
+                try:
+                  # Show the DataFrame
+                  st.subheader("DataFrame Preview:")
+                  st.write(df)
+
+                  # Allow user to choose X and Y columns
+                  x_column = st.selectbox("Select X Column:", df.columns)
+                  y_column = st.selectbox("Select Y Column:", df.columns)
+
+                  # Plot the chart
+                  chart_type = st.selectbox("Select Chart Type:", ["Line Chart", "Scatter Plot", "Bar Chart"])
+                  
+                  if chart_type == "Line Chart":
+                      st.line_chart(df[[x_column, y_column]])
+                  elif chart_type == "Scatter Plot":
+                      st.scatter_chart(df[[x_column, y_column]])
+                  elif chart_type == "Bar Chart":
+                      st.bar_chart(df[[x_column, y_column]])
+
+                except Exception as e:
+                  st.error(f"An error occurred: {e}")
+            
+            elif exp=='Graph':
+              st.subheader("Raw Data")
+              st.write(df)
+
+              # Choose a column for the graph
+              selected_row = st.selectbox("Select a row for the graph", df.columns)
+              selected_column = st.selectbox("Select a column for the graph", df.columns)
+
+              # Create a graph using Plotly Express
+              fig = px.line(df, x=selected_row, y=selected_column, title=f"{selected_column} over time with respect to {selected_row}")
+              st.plotly_chart(fig)
+
+            elif exp=='Summary':
+              st.dataframe(df)
+              # Display summary statistics
+              st.write('Summary Statistics:')
+              st.write(df.describe())
+
+    # About Page
+    elif option == 'About':
+        st.write('This is a simple Streamlit app created as an example.')
+
+# Run the app
 if __name__ == "__main__":
-    run()
+    main()
